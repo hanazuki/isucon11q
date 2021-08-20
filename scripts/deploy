@@ -1,0 +1,45 @@
+#!/bin/bash
+set -eux
+
+servers=(isucon-1)
+appdir=/home/isucon/isuumo/webapp/ruby
+appuser=isucon
+
+for server in "${servers[@]}"; do
+    rsync -rv files/ "root@$server:/"
+    ssh "root@$server" bash -s <<EOF
+set -x
+chown -R isucon $appdir
+EOF
+
+    ssh "$appuser@$server" bash -ls <<EOF
+set -x
+cd ${appdir}
+/home/isucon/local/ruby/bin/bundle install -j2 --deployment
+EOF
+
+    ssh "root@$server" bash -s <<EOF
+set -x
+systemctl daemon-reload
+systemctl restart isuumo.ruby
+systemctl reload nginx
+cp /var/log/nginx/access.log{,.$(date +%FT%T)}
+truncate -s0 /var/log/nginx/access.log
+EOF
+done
+
+rsync -rv files/etc/mysql/ "root@isucon-3:/etc/mysql/"
+ssh "root@isucon-3" bash -s <<EOF
+set -x
+systemctl restart mysql
+cp /var/log/mysql/mysql-slow.log{,.$(date +%FT%T)}
+truncate -s0 /var/log/mysql/mysql-slow.log
+EOF
+
+rsync -rv files/etc/mysql/ "root@isucon-2:/etc/mysql/"
+ssh "root@isucon-2" bash -s <<EOF
+set -x
+systemctl restart mysql
+cp /var/log/mysql/mysql-slow.log{,.$(date +%FT%T)}
+truncate -s0 /var/log/mysql/mysql-slow.log
+EOF

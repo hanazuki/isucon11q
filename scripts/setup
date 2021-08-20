@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -x
+
+servers=(isucon-1) # isucon-2 isucon-3)
+
+for server in "${servers[@]}"; do
+    ssh "root@$server" bash -xs <<'EOF'
+set -ex
+
+cd /tmp
+
+apt-get update -qq
+apt-get install -y percona-toolkit unzip wget
+
+wget https://github.com/tkuchiki/alp/releases/download/v1.0.3/alp_linux_amd64.zip
+unzip alp_linux_amd64.zip
+mv -f alp /usr/local/bin
+
+wget https://raw.githubusercontent.com/major/MySQLTuner-perl/master/mysqltuner.pl
+chmod +x mysqltuner.pl
+mv -f mysqltuner.pl /usr/local/bin
+
+rel=$(lsb_release -cs)
+
+echo "license_key: 086d7606d075b4feb223524c6440cbc619dbNRAL" | tee /etc/newrelic-infra.yml
+curl https://download.newrelic.com/infrastructure_agent/gpg/newrelic-infra.gpg | apt-key add -
+echo "deb [arch=amd64] http://download.newrelic.com/infrastructure_agent/linux/apt $rel main" | tee /etc/apt/sources.list.d/newrelic-infra.list
+
+apt-get update -qq
+apt-get install -y newrelic-infra nri-mysql nri-nginx nri-memcached nri-redis
+
+if systemctl is-enabled mysql; then
+  mysql -e "CREATE USER 'newrelic'@'localhost' IDENTIFIED BY 'newrelic' WITH MAX_USER_CONNECTIONS 5;"
+  mysql -e "GRANT REPLICATION CLIENT ON *.* TO 'newrelic'@'localhost';"
+
+tee /etc/newrelic-infra/integrations.d/mysql-config.yml <<YML
+integration_name: com.newrelic.mysql
+
+instances:
+- name: mysql-server
+  command: status
+  arguments:
+    hostname: localhost
+    port: 3306
+    username: newrelic
+    password: newrelic
+    remote_monitoring: true
+  labels:
+    env: production
+    role: write-replica
+YML
+fi
+
+systemctl restart newrelic-infra
+EOF
+
+done
