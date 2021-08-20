@@ -1,0 +1,13 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    newrelic_rpm (7.2.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  newrelic_rpm
+
+BUNDLED WITH
+   2.2.15
