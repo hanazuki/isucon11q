@@ -15,6 +15,7 @@ CREATE TABLE `isu` (
 
   INDEX isu_jia_user_id (jia_user_id, id),
   INDEX isu_jia_user_isu_uuid (jia_user_id, jia_isu_uuid),
+  INDEX isu_character (`character`),
 
   PRIMARY KEY(`id`)
 
