@@ -200,6 +200,16 @@ module Isucondition
         jia_service_url,
       )
 
+      db.xquery(
+        'SELECT `id`, `condition` FROM `isu_condition` WHERE `level` IS NULL'
+      ).each do |c|
+        db.xquery(
+          'UPDATE `isu_condition` SET `level` = ? WHERE `id` = ?',
+          calculate_condition_level(c[:condition]),
+          c[:id],
+        )
+      end
+
       FileUtils.rm_rf('/tmp/isucon')
       FileUtils.mkdir_p('/tmp/isucon')
 
@@ -266,7 +276,7 @@ module Isucondition
             timestamp: last_condition.fetch(:timestamp).to_i,
             is_sitting: last_condition.fetch(:is_sitting),
             condition: last_condition.fetch(:condition),
-            condition_level: calculate_condition_level(last_condition.fetch(:condition)),
+            condition_level: last_condition.fetch(:level),
             message: last_condition.fetch(:message),
           } : nil
 
@@ -582,15 +592,17 @@ module Isucondition
 
     # ISUのコンディションをDBから取得
     def get_isu_conditions_from_db(jia_isu_uuid, end_time, condition_level, start_time, limit, isu_name)
+      where = "`level` IN (#{condition_level.map{|s| "'#{s}'"}.join(?,)})"
+
       conditions = if start_time.to_i == 0
         db.xquery(
-          'SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? AND `timestamp` < ? ORDER BY `timestamp` DESC',
+          "SELECT * FROM `isu_condition` WHERE #{where} AND `jia_isu_uuid` = ? AND `timestamp` < ? ORDER BY `timestamp` DESC LIMIT #{limit}",
           jia_isu_uuid,
           end_time,
         )
       else
         db.xquery(
-          'SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? AND `timestamp` < ? AND ? <= `timestamp` ORDER BY `timestamp` DESC',
+          "SELECT * FROM `isu_condition` WHERE #{where} AND `jia_isu_uuid` = ? AND `timestamp` < ? AND ? <= `timestamp` ORDER BY `timestamp` DESC LIMIT #{limit}",
           jia_isu_uuid,
           end_time,
           start_time,
@@ -598,21 +610,16 @@ module Isucondition
       end
 
       conditions_response = conditions.map do |c|
-        c_level = calculate_condition_level(c.fetch(:condition))
-        if condition_level.include?(c_level)
-          {
-            jia_isu_uuid: c.fetch(:jia_isu_uuid),
-            isu_name: isu_name,
-            timestamp: c.fetch(:timestamp).to_i,
-            is_sitting: c.fetch(:is_sitting),
-            condition: c.fetch(:condition),
-            condition_level: c_level,
-            message: c.fetch(:message),
-          }
-        else
-          nil
-        end
-      end.compact
+        {
+          jia_isu_uuid: c.fetch(:jia_isu_uuid),
+          isu_name: isu_name,
+          timestamp: c.fetch(:timestamp).to_i,
+          is_sitting: c.fetch(:is_sitting),
+          condition: c.fetch(:condition),
+          condition_level: c.fetch(:level),
+          message: c.fetch(:message),
+        }
+      end
 
       conditions_response = conditions_response[0, limit] if conditions_response.size > limit
       conditions_response
