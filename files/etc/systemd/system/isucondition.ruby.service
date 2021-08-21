@@ -13,7 +13,7 @@ StandardError=null
 
 User=isucon
 Group=isucon
-ExecStart=/home/isucon/local/ruby/bin/bundle exec puma -p 3000 -w 2 --preload
+ExecStart=/home/isucon/local/ruby/bin/bundle exec puma -p 3000 -w 2 -t8:8 --preload
 ExecStop=/bin/kill -s QUIT $MAINPID
 
 Restart   = always
