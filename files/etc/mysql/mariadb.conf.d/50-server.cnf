@@ -23,6 +23,8 @@ tmpdir                  = /tmp
 lc-messages-dir         = /usr/share/mysql
 #skip-external-locking
 
+skip-name-resolve
+
 # Instead of skip-networking the default is now to listen only on
 # localhost which is more compatible and is not less secure.
 bind-address            = 0.0.0.0
@@ -110,6 +112,9 @@ collation-server      = utf8mb4_general_ci
 #
 # InnoDB is enabled by default with a 10MB datafile in /var/lib/mysql/.
 # Read the manual for more InnoDB related options. There are many!
+innodb_buffer_pool_size = 1GB
+innodb_flush_log_at_trx_commit = 2
+innodb_log_file_size = 128M
 
 #
 # * Unix socket authentication plugin is built-in since 10.0.22-6
