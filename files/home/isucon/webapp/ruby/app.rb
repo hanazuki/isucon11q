@@ -283,7 +283,7 @@ module Isucondition
       response_list = db_transaction do
         isu_list = db.xquery('SELECT * FROM `isu` WHERE `jia_user_id` = ? ORDER BY `id` DESC', jia_user_id)
         isu_list.map do |isu|
-          last_condition = db.xquery('SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? ORDER BY `timestamp` DESC LIMIT 1', isu.fetch(:jia_isu_uuid)).first
+          last_condition = db.xquery('SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? ORDER BY `neg_timestamp` LIMIT 1', isu.fetch(:jia_isu_uuid)).first
 
           formatted_condition = last_condition ? {
             jia_isu_uuid: last_condition.fetch(:jia_isu_uuid),
@@ -434,7 +434,7 @@ module Isucondition
 
     # グラフのデータ点を一日分生成
     def generate_isu_graph_response(jia_isu_uuid, graph_date)
-      rows = db.xquery('SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? ORDER BY `timestamp` ASC', jia_isu_uuid)
+      rows = db.xquery('SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? ORDER BY `timestamp`', jia_isu_uuid)
 
       data_points = []
       start_time_in_this_hour = Time.at(0)
@@ -611,13 +611,13 @@ module Isucondition
 
       conditions = if start_time.to_i == 0
         db.xquery(
-          "SELECT * FROM `isu_condition` WHERE #{where} AND `jia_isu_uuid` = ? AND `timestamp` < ? ORDER BY `timestamp` DESC LIMIT #{limit}",
+          "SELECT * FROM `isu_condition` WHERE #{where} AND `jia_isu_uuid` = ? AND `neg_timestamp` > -UNIX_TIMESTAMP(?) ORDER BY `neg_timestamp` LIMIT #{limit}",
           jia_isu_uuid,
           end_time,
         )
       else
         db.xquery(
-          "SELECT * FROM `isu_condition` WHERE #{where} AND `jia_isu_uuid` = ? AND `timestamp` < ? AND ? <= `timestamp` ORDER BY `timestamp` DESC LIMIT #{limit}",
+          "SELECT * FROM `isu_condition` WHERE #{where} AND `jia_isu_uuid` = ? AND `neg_timestamp` > -UNIX_TIMESTAMP(?) AND -UNIX_TIMESTAMP(?) >= `neg_timestamp` ORDER BY `neg_timestamp` LIMIT #{limit}",
           jia_isu_uuid,
           end_time,
           start_time,

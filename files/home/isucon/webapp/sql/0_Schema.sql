@@ -31,7 +31,6 @@ CREATE TABLE `isu_condition` (
   `created_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
 
   INDEX cond_uuid_timestamp (jia_isu_uuid, `timestamp`),
-  INDEX cond_uuid_timestamp_asc (jia_isu_uuid, `timestamp` ASC),
 
   PRIMARY KEY(`id`)
 ) ENGINE=InnoDB DEFAULT CHARACTER SET=utf8mb4;
