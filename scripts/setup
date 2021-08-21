@@ -2,7 +2,7 @@
 
 set -x
 
-servers=(isu2)
+servers=(isu1 isu2 isu3)
 
 for server in "${servers[@]}"; do
     ssh "root@$server" bash -xs <<'EOF'
@@ -31,8 +31,8 @@ apt-get update -qq
 apt-get install -y newrelic-infra nri-mysql nri-nginx nri-memcached nri-redis
 
 if systemctl is-enabled mysql; then
-  mysql -e "CREATE USER 'newrelic'@'localhost' IDENTIFIED BY 'newrelic' WITH MAX_USER_CONNECTIONS 5;"
-  mysql -e "GRANT REPLICATION CLIENT ON *.* TO 'newrelic'@'localhost';"
+  mysql -e "CREATE USER IF NOT EXIST 'newrelic'@'%' IDENTIFIED BY 'newrelic' WITH MAX_USER_CONNECTIONS 5;"
+  mysql -e "GRANT REPLICATION CLIENT ON *.* TO 'newrelic'@'%';"
 
 tee /etc/newrelic-infra/integrations.d/mysql-config.yml <<YML
 integration_name: com.newrelic.mysql
