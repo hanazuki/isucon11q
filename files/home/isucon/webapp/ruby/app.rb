@@ -11,10 +11,10 @@ require 'fileutils'
 require 'redis'
 require 'redis/connection/hiredis'
 
-require 'newrelic_rpm'
-NewRelic::Agent.after_fork(:force_reconnect => true)
+# require 'newrelic_rpm'
+# NewRelic::Agent.after_fork(:force_reconnect => true)
 
-require_relative 'instruments'
+# require_relative 'instruments'
 
 module Isucondition
   class App < Sinatra::Base
