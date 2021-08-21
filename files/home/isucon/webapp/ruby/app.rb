@@ -6,6 +6,11 @@ require 'uri'
 require 'mysql2'
 require 'mysql2-cs-bind'
 
+require 'newrelic_rpm'
+NewRelic::Agent.after_fork(:force_reconnect => true)
+
+require_relative 'instruments'
+
 module Isucondition
   class App < Sinatra::Base
     configure :development do
