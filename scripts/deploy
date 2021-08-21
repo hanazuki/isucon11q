@@ -21,7 +21,7 @@ EOF
     ssh "root@$server" bash -s <<EOF
 set -x
 systemctl daemon-reload
-systemctl restart isuumo.ruby
+systemctl restart isucondition.ruby.service
 systemctl reload nginx
 cp /var/log/nginx/access.log{,.$(date +%FT%T)}
 truncate -s0 /var/log/nginx/access.log
