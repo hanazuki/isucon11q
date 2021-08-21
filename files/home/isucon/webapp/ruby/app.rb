@@ -360,7 +360,7 @@ module Isucondition
       end
 
       headers 'X-Accel-Redirect' => "/generated/icon-#{jia_user_id}-#{jia_isu_uuid}"
-      cache_control :private, max_age: 31536000, :immutable
+      cache_control :private, max_age: 31536000
     end
 
     # ISUのコンディショングラフ描画のための情報を取得
