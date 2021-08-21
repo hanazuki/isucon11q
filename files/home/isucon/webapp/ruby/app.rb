@@ -6,6 +6,8 @@ require 'uri'
 require 'mysql2'
 require 'mysql2-cs-bind'
 
+require 'fileutils'
+
 require 'newrelic_rpm'
 NewRelic::Agent.after_fork(:force_reconnect => true)
 
@@ -183,6 +185,9 @@ module Isucondition
         jia_service_url,
       )
 
+      FileUtils.rm_rf('/tmp/isucon')
+      FileUtils.mkdir_p('/tmp/isucon')
+
       content_type :json
       { language: 'ruby' }.to_json
     end
@@ -341,10 +346,21 @@ module Isucondition
       halt_error 401, 'you are not signed in' unless jia_user_id
 
       jia_isu_uuid = params[:jia_isu_uuid]
-      isu = db.xquery('SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?', jia_user_id, jia_isu_uuid).first
-      halt_error 404, 'not found: isu' unless isu
 
-      isu.fetch(:image)
+      cache_path = "/tmp/isucon/icon-#{jia_user_id}-#{jia_isu_uuid}"
+
+      unless File.exists?(cache_path)
+        isu = db.xquery('SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?', jia_user_id, jia_isu_uuid).first
+        halt_error 404, 'not found: isu' unless isu
+
+        image = isu.fetch(:image)
+
+        File.binwrite("#{cache_path}.tmp", image)
+        File.rename("#{cache_path}.tmp", cache_path)
+      end
+
+      headers 'X-Accel-Redirect' => "/generated/icon-#{jia_user_id}-#{jia_isu_uuid}"
+      cache_control :private, max_age: 31536000, :immutable
     end
 
     # ISUのコンディショングラフ描画のための情報を取得
