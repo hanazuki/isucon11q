@@ -114,10 +114,13 @@ module Isucondition
       def user_id_from_session
         jia_user_id = session[:jia_user_id]
         return nil if !jia_user_id || jia_user_id.empty?
-        count = db.xquery('SELECT COUNT(*) AS `cnt` FROM `user` WHERE `jia_user_id` = ?', jia_user_id).first
-        return nil if count.fetch(:cnt).to_i.zero?
 
-        jia_user_id
+        unless session.key?(:valid)
+          count = db.xquery('SELECT 1 AS `cnt` FROM `user` WHERE `jia_user_id` = ? LIMIT 1', jia_user_id)
+          session[:valid] = count.size > 0
+        end
+
+        session[:valid] ? jia_user_id : nil
       end
 
       def jia_service_url
