@@ -167,10 +167,19 @@ module Isucondition
 
         idx_cond_str == condition_str.size
       end
+
+      def isu_owner(jia_isu_uuid)
+        $isu_owners[jia_isu_uuid] ||= begin
+                                        row = db.xquery('SELECT `jia_user_id` FROM `isu` WHERE `jia_isu_uuid` = ?', jia_isu_uuid).first
+                                        row[:jia_user_id]
+                                      end
+      end
     end
 
     # サービスを初期化
     post '/initialize' do
+      $isu_owners = {}
+
       jia_service_url = begin
         json_params[:jia_service_url]
       rescue JSON::ParserError
@@ -327,8 +336,7 @@ module Isucondition
       halt_error 401, 'you are not signed in' unless jia_user_id
 
       jia_isu_uuid = params[:jia_isu_uuid]
-      isu = db.xquery('SELECT * FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?', jia_user_id, jia_isu_uuid).first
-      halt_error 404, 'not found: isu' unless isu
+      halt_error 404, 'not found: isu' unless isu_owner(jia_isu_uuid) != jia_user_id
 
       content_type :json
       {
@@ -376,8 +384,7 @@ module Isucondition
 
 
       res = db_transaction do
-        cnt = db.xquery('SELECT COUNT(*) AS `cnt` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?', jia_user_id, jia_isu_uuid).first
-        halt_error 404, 'not found: isu' if cnt.fetch(:cnt) == 0
+        halt_error 404, 'not found: isu' unless isu_owner(jia_isu_uuid) != jia_user_id
 
         generate_isu_graph_response(jia_isu_uuid, date)
       end
@@ -662,23 +669,28 @@ module Isucondition
       halt_error 400, 'bad request body' unless json_params.kind_of?(Array)
       halt_error 400, 'bad request body' if json_params.empty?
 
+      values = json_params.map do |cond|
+        timestamp = Time.at(cond.fetch(:timestamp))
+        halt_error 400, 'bad request body' unless valid_condition_format?(cond.fetch(:condition))
+
+        [
+          jia_isu_uuid,
+          timestamp,
+          cond.fetch(:is_sitting),
+          cond.fetch(:condition),
+          cond.fetch(:message),
+        ]
+      end
+
+      placeholder = (['(?, ?, ?, ?, ?)'] * values.size).join(',')
+
       db_transaction do
-        count = db.xquery('SELECT COUNT(*) AS `cnt` FROM `isu` WHERE `jia_isu_uuid` = ?', jia_isu_uuid).first
-        halt_error 404, 'not found: isu' if count.fetch(:cnt).zero?
+        halt_error 404, 'not found: isu' unless isu_owner(jia_isu_uuid)
 
-        json_params.each do |cond|
-          timestamp = Time.at(cond.fetch(:timestamp))
-          halt_error 400, 'bad request body' unless valid_condition_format?(cond.fetch(:condition))
-
-          db.xquery(
-            'INSERT INTO `isu_condition` (`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`) VALUES (?, ?, ?, ?, ?)',
-            jia_isu_uuid,
-            timestamp,
-            cond.fetch(:is_sitting),
-            cond.fetch(:condition),
-            cond.fetch(:message),
-          )
-        end
+        db.xquery(
+          "INSERT INTO `isu_condition` (`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`) VALUES #{placeholder}",
+          *values.flatten,
+        )
       end
 
       status 202
