@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eux
 
-servers=(isu1)
+servers=(isu1 isu2 isu3)
 appdir=/home/isucon/webapp/ruby
 appuser=isucon
 
@@ -29,6 +29,13 @@ truncate -s0 /var/log/nginx/access.log
 install -o www-data -g www-data -m 0750 -d /var/cache/nginx
 EOF
 done
+
+ssh "root@isu3" bash -els <<EOF
+systemctl restart mysql
+
+mysql -e "create user if not exists 'isucon'@'%' identified by 'isucon'"
+mysql -e "grant all ON isucondition.* TO 'isucon'@'%'"
+EOF
 
 # rsync -rv files/etc/mysql/ "root@isucon-3:/etc/mysql/"
 # ssh "root@isucon-3" bash -s <<EOF

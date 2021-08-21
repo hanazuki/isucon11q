@@ -6,11 +6,13 @@ server=$1
 dest=$(dirname "${BASH_SOURCE[0]}")/../files/
 
 paths=(
-    '/home/isucon/webapp/{sql,ruby}/'
-    '/etc/mysql/mariadb.conf.d/'
-    '/etc/nginx/nginx.conf'
-    '/etc/nginx/sites-available/*.conf'
-    '/etc/systemd/system/isu*.service'
+    '/home/isucon/env.sh'
+
+    # '/home/isucon/webapp/{sql,ruby}/'
+    # '/etc/mysql/mariadb.conf.d/'
+    # '/etc/nginx/nginx.conf'
+    # '/etc/nginx/sites-available/*.conf'
+    # '/etc/systemd/system/isu*.service'
 )
 
 for path in "${paths[@]}"; do
