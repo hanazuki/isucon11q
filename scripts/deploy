@@ -1,8 +1,8 @@
 #!/bin/bash
 set -eux
 
-servers=(isucon-1)
-appdir=/home/isucon/isuumo/webapp/ruby
+servers=(isu1)
+appdir=/home/isucon/webapp/ruby
 appuser=isucon
 
 for server in "${servers[@]}"; do
@@ -28,18 +28,18 @@ truncate -s0 /var/log/nginx/access.log
 EOF
 done
 
-rsync -rv files/etc/mysql/ "root@isucon-3:/etc/mysql/"
-ssh "root@isucon-3" bash -s <<EOF
-set -x
-systemctl restart mysql
-cp /var/log/mysql/mysql-slow.log{,.$(date +%FT%T)}
-truncate -s0 /var/log/mysql/mysql-slow.log
-EOF
+# rsync -rv files/etc/mysql/ "root@isucon-3:/etc/mysql/"
+# ssh "root@isucon-3" bash -s <<EOF
+# set -x
+# systemctl restart mysql
+# cp /var/log/mysql/mysql-slow.log{,.$(date +%FT%T)}
+# truncate -s0 /var/log/mysql/mysql-slow.log
+# EOF
 
-rsync -rv files/etc/mysql/ "root@isucon-2:/etc/mysql/"
-ssh "root@isucon-2" bash -s <<EOF
-set -x
-systemctl restart mysql
-cp /var/log/mysql/mysql-slow.log{,.$(date +%FT%T)}
-truncate -s0 /var/log/mysql/mysql-slow.log
-EOF
+# rsync -rv files/etc/mysql/ "root@isucon-2:/etc/mysql/"
+# ssh "root@isucon-2" bash -s <<EOF
+# set -x
+# systemctl restart mysql
+# cp /var/log/mysql/mysql-slow.log{,.$(date +%FT%T)}
+# truncate -s0 /var/log/mysql/mysql-slow.log
+# EOF
