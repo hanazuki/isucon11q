@@ -728,14 +728,14 @@ module Isucondition
 
       placeholder = (['(?, ?, ?, ?, ?, ?)'] * values.size).join(',')
 
-      db_transaction do
+#      db_transaction do
         halt_error 404, 'not found: isu' unless isu_owner(jia_isu_uuid)
 
         db.xquery(
           "INSERT INTO `isu_condition` (`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`, `level`) VALUES #{placeholder}",
           *values.flatten,
         )
-      end
+#      end
 
       status 202
       ''
