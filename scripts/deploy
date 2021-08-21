@@ -25,6 +25,8 @@ systemctl restart isucondition.ruby.service
 systemctl reload nginx
 cp /var/log/nginx/access.log{,.$(date +%FT%T)}
 truncate -s0 /var/log/nginx/access.log
+
+install -o www-data -g www-data -m 0750 -d /var/cache/nginx
 EOF
 done
 

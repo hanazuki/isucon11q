@@ -620,6 +620,8 @@ module Isucondition
         }
       end
 
+      cache_control :public, :max_age => 10
+
       content_type :json
       res.to_json
     end
