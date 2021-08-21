@@ -434,7 +434,12 @@ module Isucondition
 
     # グラフのデータ点を一日分生成
     def generate_isu_graph_response(jia_isu_uuid, graph_date)
-      rows = db.xquery('SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? ORDER BY `timestamp`', jia_isu_uuid)
+      rows = db.xquery(
+        '/*generate_isu_graph_response*/ SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? AND ? <= `timestamp` AND `timestamp` < ? ORDER BY `timestamp`',
+        jia_isu_uuid,
+        graph_date,
+        graph_date + 3600*24,
+      )
 
       data_points = []
       start_time_in_this_hour = Time.at(0)
