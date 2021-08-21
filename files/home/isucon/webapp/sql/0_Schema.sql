@@ -14,6 +14,7 @@ CREATE TABLE `isu` (
   `updated_at` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
 
   INDEX isu_jia_user_id (jia_user_id, id),
+  INDEX isu_jia_user_isu_uuid (jia_user_id, jia_isu_uuid),
 
   PRIMARY KEY(`id`)
 
