@@ -687,22 +687,25 @@ module Isucondition
         timestamp = Time.at(cond.fetch(:timestamp))
         halt_error 400, 'bad request body' unless valid_condition_format?(cond.fetch(:condition))
 
+        level = calculate_condition_level(cond.fetch(:condition))
+
         [
           jia_isu_uuid,
           timestamp,
           cond.fetch(:is_sitting),
           cond.fetch(:condition),
           cond.fetch(:message),
+          level,
         ]
       end
 
-      placeholder = (['(?, ?, ?, ?, ?)'] * values.size).join(',')
+      placeholder = (['(?, ?, ?, ?, ?, ?)'] * values.size).join(',')
 
       db_transaction do
         halt_error 404, 'not found: isu' unless isu_owner(jia_isu_uuid)
 
         db.xquery(
-          "INSERT INTO `isu_condition` (`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`) VALUES #{placeholder}",
+          "INSERT INTO `isu_condition` (`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`, `level`) VALUES #{placeholder}",
           *values.flatten,
         )
       end
