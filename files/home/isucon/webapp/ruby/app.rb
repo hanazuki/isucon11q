@@ -8,6 +8,9 @@ require 'mysql2-cs-bind'
 
 require 'fileutils'
 
+require 'redis'
+require 'redis/connection/hiredis'
+
 require 'newrelic_rpm'
 NewRelic::Agent.after_fork(:force_reconnect => true)
 
@@ -98,6 +101,10 @@ module Isucondition
         db.query('ROLLBACK') unless done
       end
 
+      def redis
+        Thread.current[:redis] ||= Redis.new(host: '127.0.0.1', driver: :hiredis)
+      end
+
       def halt_error(*args)
         content_type 'text/plain'
         halt(*args)
@@ -169,10 +176,17 @@ module Isucondition
       end
 
       def isu_owner(jia_isu_uuid)
-        $isu_owners[jia_isu_uuid] ||= begin
-                                        row = db.xquery('SELECT `jia_user_id` FROM `isu` WHERE `jia_isu_uuid` = ?', jia_isu_uuid).first
-                                        row[:jia_user_id]
-                                      end
+        owner = redis.hget('isu_owners', jia_isu_uuid)
+        return owner if owner
+
+        owner =  begin
+                   row = db.xquery('SELECT `jia_user_id` FROM `isu` WHERE `jia_isu_uuid` = ?', jia_isu_uuid).first
+                   row[:jia_user_id]
+                 end
+
+        redis.hset('isu_owners', jia_isu_uuid, owner)
+
+        owner
       end
     end
 
@@ -218,9 +232,10 @@ module Isucondition
     end
 
     post '/clear' do
-      $isu_owners = {}
-
-      
+      keys = redis.keys
+      unless keys.empty?
+        redis.del(keys)
+      end
     end
 
     # サインアップ・サインイン

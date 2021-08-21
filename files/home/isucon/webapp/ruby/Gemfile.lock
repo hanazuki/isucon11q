@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    hiredis (0.6.3)
     jwt (2.2.3)
     multi_json (1.15.0)
     mustermann (1.1.1)
@@ -15,6 +16,7 @@ GEM
     rack (2.2.3)
     rack-protection (2.1.0)
       rack
+    redis (4.4.0)
     ruby2_keywords (0.0.5)
     sinatra (2.1.0)
       mustermann (~> 1.0)
@@ -33,11 +35,13 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  hiredis
   jwt
   mysql2
   mysql2-cs-bind
   newrelic_rpm
   puma
+  redis
   sinatra
   sinatra-contrib
 
