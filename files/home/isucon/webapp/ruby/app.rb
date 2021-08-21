@@ -178,7 +178,13 @@ module Isucondition
 
     # サービスを初期化
     post '/initialize' do
-      $isu_owners = {}
+      %w[
+         isucondition-1.t.isucon.dev
+         isucondition-2.t.isucon.dev
+         isucondition-3.t.isucon.dev
+      ].each do |host|
+        Thread.new { system('curl', '-XPOST', '-k', "https://#{host}/clear") }
+      end
 
       jia_service_url = begin
         json_params[:jia_service_url]
@@ -199,6 +205,12 @@ module Isucondition
 
       content_type :json
       { language: 'ruby' }.to_json
+    end
+
+    post '/clear' do
+      $isu_owners = {}
+
+      
     end
 
     # サインアップ・サインイン
