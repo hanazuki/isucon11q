@@ -531,28 +531,11 @@ module Isucondition
       raw_score = 0
 
       isu_conditions.each do |condition|
-        bad_conditions_count = 0
+        conditions_count['is_broken'] += condition[:is_broken].to_i
+        conditions_count['is_dirty'] += condition[:is_dirty].to_i
+        conditions_count['is_overweight'] += condition[:is_overweight].to_i
 
-        unless valid_condition_format?(condition.fetch(:condition))
-          raise "invalid condition format"
-        end
-
-        condition.fetch(:condition).split(',').each do |cond_str|
-          condition_name, value = cond_str.split('=')
-          if value == 'true'
-            conditions_count[condition_name] += 1
-            bad_conditions_count += 1
-          end
-        end
-
-        case
-        when bad_conditions_count >= 3
-          raw_score += SCORE_CONDITION_LEVEL_CRITICAL
-        when bad_conditions_count >= 1
-          raw_score += SCORE_CONDITION_LEVEL_WARNING
-        else
-          raw_score += SCORE_CONDITION_LEVEL_INFO
-        end
+        raw_score += condition[:score].to_i
       end
 
       sitting_count = 0
