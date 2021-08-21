@@ -644,7 +644,6 @@ module Isucondition
         }
       end
 
-      conditions_response = conditions_response[0, limit] if conditions_response.size > limit
       conditions_response
     end
 
