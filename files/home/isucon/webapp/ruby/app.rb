@@ -693,8 +693,8 @@ module Isucondition
     # ISUからのコンディションを受け取る
     post '/api/condition/:jia_isu_uuid' do
       # TODO: 一定割合リクエストを落としてしのぐようにしたが、本来は全量さばけるようにすべき
-      drop_probability = 0.3
-      if rand <= drop_probability
+      drop_probability = 0.0
+      if rand < drop_probability
         request.env['rack.logger'].warn 'drop post isu condition request'
         halt_error 202, ''
       end
