@@ -228,7 +228,6 @@ module Isucondition
       end
 
       FileUtils.rm_rf('/tmp/isucon')
-      FileUtils.mkdir_p('/tmp/isucon')
 
       content_type :json
       { language: 'ruby' }.to_json
@@ -399,6 +398,8 @@ module Isucondition
       cache_path = "/tmp/isucon/icon-#{jia_user_id}-#{jia_isu_uuid}"
 
       unless File.exists?(cache_path)
+        Dir.mkdir('/tmp/isucon') rescue nil
+
         isu = db.xquery('SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?', jia_user_id, jia_isu_uuid).first
         halt_error 404, 'not found: isu' unless isu
 
